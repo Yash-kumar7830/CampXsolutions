@@ -102,9 +102,9 @@
 
 .campus-login-hero {
   background:
-    radial-gradient(circle at 80% 20%, rgba(224, 255, 164, 0.55), transparent 24%),
-    radial-gradient(circle at 20% 85%, rgba(102, 212, 120, 0.38), transparent 30%),
-    linear-gradient(125deg, #5fbd73 0%, #8ed56e 38%, #3fae78 68%, #b6e76f 100%);
+    radial-gradient(circle at 80% 20%, rgba(76, 153, 93, 0.3), transparent 24%),
+    radial-gradient(circle at 20% 85%, rgba(16, 95, 62, 0.42), transparent 30%),
+    linear-gradient(125deg, #123f32 0%, #1b6344 38%, #14553d 68%, #24734b 100%);
   background-size: 180% 180%, 160% 160%, 220% 220%;
   animation: campus-gradient-shift 12s ease-in-out infinite;
 }
@@ -114,7 +114,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(135deg, rgba(14, 86, 57, 0.16), transparent 58%);
+  background: linear-gradient(135deg, rgba(4, 29, 23, 0.2), transparent 58%);
 }
 
 @keyframes campus-gradient-shift {
