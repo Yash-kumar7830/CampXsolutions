@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Bell, Check, CheckCircle2, MapPin, MessageCircle, Plus, Search, ShieldCheck, SlidersHorizontal, Sparkles, X, } from 'lucide-react';
+import { Bell, Check, CheckCircle2, MapPin, MessageCircle, Plus, Search, ShieldCheck, SlidersHorizontal, Sparkles, Trash2, X, } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import ItemFormModal from '@/components/ItemFormModal';
 import ChatModal from '@/components/ChatModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { createItem, getItems, getMyClaims, startClaim, subscribeToClaims, subscribeToItems, updateClaimStatus, updateItemStatus, } from '@/lib/campusApi';
+import { createItem, deleteItem, getItems, getMyClaims, startClaim, subscribeToClaims, subscribeToItems, updateClaimStatus, updateItemStatus, } from '@/lib/campusApi';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { showError, showSuccess } from '@/utils/toast';
 import { demoItems } from '@/data/demoItems';
@@ -156,6 +156,21 @@ const Index = () => {
             showError(error instanceof Error ? error.message : 'Could not update item status.');
         }
     };
+    const handleDeleteItem = async (item) => {
+        if (!item.id)
+            return;
+        const confirmed = window.confirm(`Are you sure you want to delete "${item.title}"? This cannot be undone.`);
+        if (!confirmed)
+            return;
+        try {
+            await deleteItem(item.id);
+            showSuccess(`"${item.title}" was deleted successfully.`);
+            await refresh();
+        }
+        catch (error) {
+            showError(error instanceof Error ? error.message : 'Could not delete item.');
+        }
+    };
     const openExistingChat = (claim) => {
         const item = items.find((entry) => entry.id === claim.report_id);
         if (item)
@@ -274,6 +289,14 @@ const Index = () => {
                                   <CheckCircle2 size={14} className="text-[#6f9468]"/>
                                   {item.status === 'resolved' ? 'Returned to owner' : 'Visible on campus'}
                                 </span>
+                                <button
+                                  type="button"
+                                  onClick={() => void handleDeleteItem(item)}
+                                  className="flex items-center gap-1 text-[11px] text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition"
+                                  title="Delete this report"
+                                >
+                                  <Trash2 size={13}/> Delete
+                                </button>
                               </div>
                               <Button
                                 size="sm"
