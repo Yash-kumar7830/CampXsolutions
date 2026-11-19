@@ -35,7 +35,7 @@ const DesktopNav = () => {
       <nav className="mx-auto flex h-[68px] max-w-[1320px] items-center justify-between px-4 sm:px-7 lg:px-10">
         <Link to="/" className="flex items-center gap-2.5">
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#183a2f] text-[#d2ee82]"><MapPin size={18}/></span>
-          <span className="font-bold tracking-tight text-[#1d382b]">campXsolutions</span>
+          <span className="font-bold tracking-tight text-[#1d382b]">CampXsolutions</span>
         </Link>
         <div className="flex items-center gap-3">
           <Link to="/" className="hidden text-sm font-medium text-[#536657] hover:text-[#214b3b] sm:inline">Lost &amp; Found</Link>

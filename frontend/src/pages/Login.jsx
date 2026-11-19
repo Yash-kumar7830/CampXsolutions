@@ -153,7 +153,7 @@ const LoginPage = () => {
           <div className="absolute -right-20 -top-12 h-[410px] w-[410px] rounded-full border border-white/10"/>
           <div className="relative flex items-center gap-3">
             <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[#d0f16e] text-[#102b25]"><MapPin size={22} strokeWidth={2.8}/></div>
-            <span className="text-xl font-bold tracking-tight">campXsolutions</span>
+            <span className="text-xl font-bold tracking-tight">CampXsolutions</span>
           </div>
           <div className="relative my-auto max-w-xl pb-10">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-medium text-[#d0f16e]">
@@ -182,7 +182,7 @@ const LoginPage = () => {
         <section className="flex min-h-screen flex-col bg-[#f7f8f4] px-6 py-7 sm:px-10 lg:px-14">
           <div className="flex items-center gap-3 lg:invisible">
             <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#173b30] text-[#d0f16e]"><MapPin size={20}/></div>
-            <span className="text-lg font-bold text-[#173b30]">campXsolutions</span>
+            <span className="text-lg font-bold text-[#173b30]">CampXsolutions</span>
           </div>
           <div className="mx-auto flex w-full max-w-[440px] flex-1 flex-col justify-center py-12">
             <div className="mb-7">
@@ -263,7 +263,7 @@ const LoginPage = () => {
               <p className="text-xs leading-5 text-[#78847b]">Your password is managed securely by Supabase.</p>
             </div>
           </div>
-          <p className="text-center text-xs text-[#9ca69e] lg:text-right">campXsolutions · A safer way to find what matters</p>
+          <p className="text-center text-xs text-[#9ca69e] lg:text-right">CampXsolutions · A safer way to find what matters</p>
         </section>
       </div>
     </main>);
