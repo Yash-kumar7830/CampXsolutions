@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Home, LogOut, ShoppingBag, ClipboardList } from 'lucide-react';
+import { Home, LogOut, ShoppingBag, ClipboardList, User } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -34,6 +34,11 @@ const MobileNav = () => {
         <li>
           <Link to="/reports" className="flex flex-col items-center gap-1 text-[#87948a] dark:text-[#5a7a60]">
             <ClipboardList size={19}/><span className="text-[10px]">Reports</span>
+          </Link>
+        </li>
+        <li>
+          <Link to="/profile" className="flex flex-col items-center gap-1 text-[#87948a] dark:text-[#5a7a60]">
+            <User size={19}/><span className="text-[10px]">Profile</span>
           </Link>
         </li>
         <li className="flex flex-col items-center gap-1">

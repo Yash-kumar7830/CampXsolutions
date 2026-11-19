@@ -12,6 +12,7 @@ import Index from '@/pages/Index';
 import NotFound from '@/pages/NotFound';
 import Marketplace from '@/pages/Marketplace';
 import Reports from '@/pages/Reports';
+import Profile from '@/pages/Profile';
 import MobileNav from '@/components/MobileNav';
 import { MapPin } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -41,6 +42,7 @@ const DesktopNav = () => {
           <Link to="/" className="hidden text-sm font-medium text-[#536657] hover:text-[#214b3b] sm:inline">Lost &amp; Found</Link>
           <Link to="/marketplace" className="hidden text-sm font-medium text-[#536657] hover:text-[#214b3b] sm:inline">Marketplace</Link>
           <Link to="/reports" className="hidden text-sm font-medium text-[#536657] hover:text-[#214b3b] sm:inline">Reports / Surveys</Link>
+          <Link to="/profile" className="hidden text-sm font-medium text-[#536657] hover:text-[#214b3b] sm:inline">My Activity</Link>
           <span className="hidden text-sm text-[#718078] dark:text-[#8aaa85] sm:inline">Hi, {currentUser.username}</span>
           <ThemeToggle />
           <Button variant="outline" onClick={handleLogout} className="h-9 rounded-lg border-[#dfe6dc] bg-white px-3 text-xs text-[#536657] hover:bg-[#f4f7f2] dark:border-[#2e3d35] dark:bg-[#1a2e25] dark:text-[#9ec99a] dark:hover:bg-[#1f3829]">Sign out</Button>
@@ -63,6 +65,9 @@ const AppRoutes = () => {
         <Route path="/" element={currentUser && !requiresPasswordSetup ? <Index /> : <Navigate to="/login" replace/>}/>
         <Route path="/marketplace" element={currentUser && !requiresPasswordSetup ? <Marketplace /> : <Navigate to="/login" replace/>}/>
         <Route path="/reports" element={currentUser && !requiresPasswordSetup ? <Reports /> : <Navigate to="/login" replace/>}/>
+        <Route path="/profile" element={currentUser && !requiresPasswordSetup ? <Profile /> : <Navigate to="/login" replace/>}/>
+        <Route path="/my-items" element={currentUser && !requiresPasswordSetup ? <Navigate to="/profile" replace/> : <Navigate to="/login" replace/>}/>
+        <Route path="/my-claims" element={currentUser && !requiresPasswordSetup ? <Navigate to="/profile" replace/> : <Navigate to="/login" replace/>}/>
         <Route path="/surveys" element={currentUser && !requiresPasswordSetup ? <Navigate to="/reports" replace/> : <Navigate to="/login" replace/>}/>
         <Route path="/admin" element={currentUser?.isAdmin && !requiresPasswordSetup ? <Navigate to="/reports" replace/> : currentUser && !requiresPasswordSetup ? <Navigate to="/" replace/> : <Navigate to="/login" replace/>}/>
         <Route path="*" element={currentUser && !requiresPasswordSetup ? <NotFound /> : <Navigate to="/login" replace/>}/>
