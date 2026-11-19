@@ -26,6 +26,14 @@ export async function updateItemStatus(itemId, status) {
     if (error)
         throw new Error(error.message);
 }
+export async function deleteItem(itemId) {
+    const { error } = await client()
+        .from('items')
+        .delete()
+        .eq('id', itemId);
+    if (error)
+        throw new Error(error.message);
+}
 export async function createItem(item) {
     const { error } = await client().from('items').insert({
         type: item.type,
