@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import ItemFormModal from '@/components/ItemFormModal';
 import ChatModal from '@/components/ChatModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { createItem, deleteItem, getItems, getMyClaims, startClaim, subscribeToClaims, subscribeToItems, updateClaimStatus, updateItemStatus, } from '@/lib/campusApi';
+import { archiveOldItems, createItem, deleteItem, getItems, getMyClaims, startClaim, subscribeToClaims, subscribeToItems, updateClaimStatus, updateItemStatus, } from '@/lib/campusApi';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { showError, showSuccess } from '@/utils/toast';
 import { demoItems } from '@/data/demoItems';
@@ -60,6 +60,7 @@ const Index = () => {
             return;
         }
         try {
+            await archiveOldItems();
             const [itemRows, claimRows] = await Promise.all([getItems(), getMyClaims(currentUser.id)]);
             setItems(itemRows);
             setClaims(claimRows);
@@ -91,6 +92,8 @@ const Index = () => {
                 ? item.status === 'active'
                 : filter === 'returned'
                 ? item.status === 'resolved'
+                : filter === 'archived'
+                ? item.status === 'archived'
                 : item.type === filter && item.status === 'active';
         return matchesText && matchesCategory && matchesTab;
     }), [items, search, filter, selectedCategory]);
@@ -235,6 +238,7 @@ const Index = () => {
                     { key: 'lost', label: 'Lost' },
                     { key: 'found', label: 'Found' },
                     { key: 'returned', label: 'Returned' },
+                    { key: 'archived', label: 'Archived' },
                   ].map(({ key, label }) => (<button key={key} onClick={() => setFilter(key)} className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition ${filter === key ? 'bg-[#214b3b] text-white dark:bg-[#2b5e4a]' : 'text-[#728077] hover:bg-[#f1f4ef] dark:text-[#8ea594] dark:hover:bg-[#1a3024]'}`}>
                       {label}
                     </button>))}
@@ -266,8 +270,8 @@ const Index = () => {
                             event.currentTarget.src = fallbackImage;
                         }
                     }} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" loading="lazy"/>
-                        <Badge className={`absolute left-3 top-3 border-0 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${item.status === 'resolved' ? 'bg-[#e2e8e0] text-[#56685a] dark:bg-[#1a2d21] dark:text-[#a1b8a5]' : isLost ? 'bg-[#fff3d9] text-[#956c1f] hover:bg-[#fff3d9]' : 'bg-[#e7f3e4] text-[#47744a] hover:bg-[#e7f3e4]'}`}>
-                          {item.status === 'resolved' ? 'Returned' : isLost ? 'Lost' : 'Found'}
+                        <Badge className={`absolute left-3 top-3 border-0 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${item.status === 'archived' ? 'bg-zinc-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400' : item.status === 'resolved' ? 'bg-[#e2e8e0] text-[#56685a] dark:bg-[#1a2d21] dark:text-[#a1b8a5]' : isLost ? 'bg-[#fff3d9] text-[#956c1f] hover:bg-[#fff3d9]' : 'bg-[#e7f3e4] text-[#47744a] hover:bg-[#e7f3e4]'}`}>
+                          {item.status === 'archived' ? 'Archived (30d+)' : item.status === 'resolved' ? 'Returned' : isLost ? 'Lost' : 'Found'}
                         </Badge>
                         {ownReport && <span className="absolute right-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-[#47634a]">Your report</span>}
                       </div>
