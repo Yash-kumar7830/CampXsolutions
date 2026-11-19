@@ -80,7 +80,7 @@ const Marketplace = () => {
     };
 
     return (
-      <main className="min-h-screen bg-[#f7f8f5] pb-20 text-[#1d2d24]">
+      <main className="min-h-screen bg-[#f7f8f5] pb-20 text-[#1d2d24] dark:bg-[#0d1a13] dark:text-[#d4e8d0]">
         <div className="mx-auto max-w-[1100px] px-4 py-8 sm:px-7">
           <section className="mb-7 rounded-3xl bg-[#183a2f] p-7 text-white sm:p-9">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#c8df9c]">KIET student exchange</p>

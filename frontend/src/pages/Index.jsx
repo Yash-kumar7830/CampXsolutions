@@ -125,7 +125,7 @@ const Index = () => {
         if (item)
             setActiveChat({ item, claim });
     };
-    return (<main className="min-h-screen bg-[#f7f8f5] pb-12 text-[#1d2d24]">
+    return (<main className="min-h-screen bg-[#f7f8f5] pb-12 text-[#1d2d24] dark:bg-[#0d1a13] dark:text-[#d4e8d0]">
       <div className="mx-auto max-w-[1320px] px-4 py-7 sm:px-7 lg:px-10">
         {!isSupabaseConfigured && (<div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-5 text-amber-900">
         Sample lost-and-found reports are shown in demo mode. Claims and realtime chat require a configured Supabase backend.
