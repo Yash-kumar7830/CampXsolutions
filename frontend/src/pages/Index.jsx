@@ -7,11 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import ItemFormModal from '@/components/ItemFormModal';
 import ChatModal from '@/components/ChatModal';
 import { useAuth } from '@/contexts/AuthContext';
-<<<<<<< HEAD
-import { createItem, deleteItem, getItems, getMyClaims, startClaim, subscribeToClaims, subscribeToItems, updateClaimStatus, } from '@/lib/campusApi';
-=======
-import { archiveOldItems, createItem, deleteItem, getItems, getMyClaims, startClaim, subscribeToClaims, subscribeToItems, updateClaimStatus, updateItemStatus, } from '@/lib/campusApi';
->>>>>>> dec0b634f579602640f3784b12d47a6807ea7e86
+import { archiveOldItems, createItem, deleteItem, getItems, getMyClaims, startClaim, subscribeToClaims, subscribeToItems, updateClaimStatus, updateItemStatus } from '@/lib/campusApi';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { showError, showSuccess } from '@/utils/toast';
 import { demoItems } from '@/data/demoItems';
@@ -55,6 +51,7 @@ const Index = () => {
     const [loading, setLoading] = useState(true);
     const [busyClaim, setBusyClaim] = useState(null);
     const [busyReturned, setBusyReturned] = useState(null);
+    const [busyDeleted, setBusyDeleted] = useState(null);
     const [activeChat, setActiveChat] = useState(null);
     const refresh = useCallback(async () => {
         if (!currentUser)
@@ -67,7 +64,7 @@ const Index = () => {
         }
         try {
             await archiveOldItems();
-            const [itemRows, claimRows] = await Promise.all([getItems(), getMyClaims(currentUser.id)]);
+            const [itemRows, claimRows] = await Promise.all([getItems(currentUser.id), getMyClaims(currentUser.id)]);
             setItems(itemRows);
             setClaims(claimRows);
         }
@@ -152,49 +149,39 @@ const Index = () => {
             setBusyClaim(null);
         }
     };
-<<<<<<< HEAD
-    const markItemReturned = async (item) => {
+    const toggleItemReturned = async (item) => {
         if (!currentUser)
             return;
+        const nextStatus = item.status === 'resolved' ? 'active' : 'resolved';
         setBusyReturned(item.id);
         try {
-            await deleteItem(item.id, currentUser.id);
-            showSuccess('Item marked as returned and removed from the reports.');
+            await updateItemStatus(item.id, nextStatus, currentUser.id);
+            showSuccess(nextStatus === 'resolved' ? 'Item moved to Returned.' : 'Item moved back to active reports.');
             await refresh();
         }
         catch (error) {
-            showError(error instanceof Error ? error.message : 'Could not mark this item as returned.');
+            showError(error instanceof Error ? error.message : 'Could not update this item.');
         }
         finally {
             setBusyReturned(null);
-=======
-    const toggleItemReturned = async (item) => {
-        if (!item.id)
-            return;
-        const nextStatus = item.status === 'resolved' ? 'active' : 'resolved';
-        try {
-            await updateItemStatus(item.id, nextStatus);
-            showSuccess(nextStatus === 'resolved' ? 'Item marked as returned!' : 'Item marked as active again.');
-            await refresh();
-        }
-        catch (error) {
-            showError(error instanceof Error ? error.message : 'Could not update item status.');
         }
     };
     const handleDeleteItem = async (item) => {
-        if (!item.id)
+        if (!currentUser)
             return;
-        const confirmed = window.confirm(`Are you sure you want to delete "${item.title}"? This cannot be undone.`);
-        if (!confirmed)
-            return;
+        setBusyDeleted(item.id);
         try {
-            await deleteItem(item.id);
-            showSuccess(`"${item.title}" was deleted successfully.`);
+            await deleteItem(item.id, currentUser.id);
+            if (activeChat?.item.id === item.id)
+                setActiveChat(null);
+            showSuccess(`"${item.title}" was deleted.`);
             await refresh();
         }
         catch (error) {
-            showError(error instanceof Error ? error.message : 'Could not delete item.');
->>>>>>> dec0b634f579602640f3784b12d47a6807ea7e86
+            showError(error instanceof Error ? error.message : 'Could not delete this item.');
+        }
+        finally {
+            setBusyDeleted(null);
         }
     };
     const openExistingChat = (claim) => {
@@ -308,66 +295,52 @@ const Index = () => {
                         </div>
                         <p className="mt-3 line-clamp-2 min-h-10 text-xs leading-5 text-[#78857b]">{item.description}</p>
                         <div className="mt-3 flex items-center gap-1.5 text-xs text-[#718078]"><MapPin size={13} className="shrink-0 text-[#79936f]"/><span className="truncate">{item.location || 'KIET campus'}</span></div>
-<<<<<<< HEAD
-                        <div className="mt-4 border-t border-[#eef1ec] pt-3">
-                          {ownReport ? (<div className="flex flex-col gap-2">
-                            <div className="flex items-center gap-2 text-xs text-[#7c897f]"><CheckCircle2 size={15} className="text-[#6f9468]"/> Your report is visible to campus</div>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm" disabled={busyReturned === item.id} className="w-full rounded-lg border-[#dce5d9] text-xs font-semibold text-[#416245]">
-                                  <CheckCircle2 size={15} className="mr-2"/> Mark as returned
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Mark this item as returned?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This permanently deletes {item.title} and its related claim conversations from the database.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction disabled={busyReturned === item.id} onClick={() => void markItemReturned(item)}>
-                                    {busyReturned === item.id ? 'Removing...' : 'Mark as returned'}
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>) : myClaim ? (<Button variant="outline" onClick={() => openExistingChat(myClaim)} className="h-9 w-full rounded-lg border-[#dce5d9] text-xs font-semibold text-[#416245]">
-=======
                         <div className="mt-4 border-t border-[#eef1ec] pt-3 dark:border-[#203429]">
                           {ownReport ? (
                             <div className="flex flex-col gap-2">
-                              <div className="flex items-center justify-between text-xs text-[#7c897f] dark:text-[#8ea594]">
-                                <span className="flex items-center gap-1.5">
-                                  <CheckCircle2 size={14} className="text-[#6f9468]"/>
-                                  {item.status === 'resolved' ? 'Returned to owner' : 'Visible on campus'}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => void handleDeleteItem(item)}
-                                  className="flex items-center gap-1 text-[11px] text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition"
-                                  title="Delete this report"
-                                >
-                                  <Trash2 size={13}/> Delete
-                                </button>
+                              <div className="flex items-center gap-2 text-xs text-[#7c897f] dark:text-[#8ea594]">
+                                <CheckCircle2 size={15} className="text-[#6f9468]"/>
+                                {item.status === 'resolved' ? 'Returned to owner' : 'Your report is visible to campus'}
                               </div>
-                              <Button
-                                size="sm"
-                                variant={item.status === 'resolved' ? 'outline' : 'secondary'}
-                                onClick={() => void toggleItemReturned(item)}
-                                className={`h-8 w-full rounded-lg text-xs font-semibold ${
-                                  item.status === 'resolved'
-                                    ? 'border-[#dce5d9] text-[#536657] hover:bg-[#f1f5ee] dark:border-[#2a3c32] dark:text-[#a2c89f]'
-                                    : 'bg-[#eaf3e6] text-[#2c5f38] hover:bg-[#dbebd5] dark:bg-[#1a3828] dark:text-[#9fe2ab]'
-                                }`}
-                              >
-                                <Check size={14} className="mr-1.5"/>
-                                {item.status === 'resolved' ? 'Re-open item' : 'Mark as returned'}
-                              </Button>
+                              <div className="flex items-center justify-between">
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button type="button" variant="ghost" size="sm" disabled={busyDeleted === item.id} className="h-8 px-2 text-xs text-red-500 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/40">
+                                      <Trash2 size={13} className="mr-1"/> Delete
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete this report?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This permanently deletes {item.title} and its related claim conversations.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction disabled={busyDeleted === item.id} onClick={() => void handleDeleteItem(item)}>
+                                        {busyDeleted === item.id ? 'Deleting...' : 'Delete report'}
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                                <Button
+                                  size="sm"
+                                  variant={item.status === 'resolved' ? 'outline' : 'secondary'}
+                                  disabled={busyReturned === item.id}
+                                  onClick={() => void toggleItemReturned(item)}
+                                  className={`h-8 rounded-lg text-xs font-semibold ${
+                                    item.status === 'resolved'
+                                      ? 'border-[#dce5d9] text-[#536657] hover:bg-[#f1f5ee] dark:border-[#2a3c32] dark:text-[#a2c89f]'
+                                      : 'bg-[#eaf3e6] text-[#2c5f38] hover:bg-[#dbebd5] dark:bg-[#1a3828] dark:text-[#9fe2ab]'
+                                  }`}
+                                >
+                                  <Check size={14} className="mr-1.5"/>
+                                  {busyReturned === item.id ? 'Updating...' : item.status === 'resolved' ? 'Re-open item' : 'Mark as returned'}
+                                </Button>
+                              </div>
                             </div>
                           ) : myClaim ? (<Button variant="outline" onClick={() => openExistingChat(myClaim)} className="h-9 w-full rounded-lg border-[#dce5d9] text-xs font-semibold text-[#416245]">
->>>>>>> dec0b634f579602640f3784b12d47a6807ea7e86
                               <MessageCircle size={15} className="mr-2"/> {myClaim.status === 'pending' ? 'Continue conversation' : `Claim ${myClaim.status}`}
                             </Button>) : (<Button onClick={() => void openClaimChat(item)} disabled={!isSupabaseConfigured || busyClaim === item.id || item.status === 'resolved'} className="h-9 w-full rounded-lg bg-[#214b3b] text-xs font-semibold hover:bg-[#2a5a48]">
                               <MessageCircle size={15} className="mr-2"/> {busyClaim === item.id ? 'Opening chat…' : isLost ? 'I found this' : 'This could be mine'}

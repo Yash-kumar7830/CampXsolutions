@@ -26,7 +26,7 @@ const Profile = () => {
         }
         try {
             const [allItems, allClaims] = await Promise.all([
-                getItems(),
+                getItems(currentUser.id),
                 getMyClaims(currentUser.id),
             ]);
             setItems(allItems);
@@ -48,10 +48,12 @@ const Profile = () => {
     const myClaimRequests = claims.filter((claim) => claim.claimant_id === currentUser?.id);
 
     const handleToggleReturned = async (item) => {
+        if (!currentUser)
+            return;
         const nextStatus = item.status === 'resolved' ? 'active' : 'resolved';
         try {
-            await updateItemStatus(item.id, nextStatus);
-            showSuccess(nextStatus === 'resolved' ? 'Marked as returned!' : 'Marked active.');
+            await updateItemStatus(item.id, nextStatus, currentUser.id);
+            showSuccess(nextStatus === 'resolved' ? 'Item marked as returned.' : 'Item marked active.');
             await refreshData();
         } catch (error) {
             showError(error instanceof Error ? error.message : 'Status update failed.');
@@ -59,9 +61,11 @@ const Profile = () => {
     };
 
     const handleDelete = async (item) => {
+        if (!currentUser)
+            return;
         if (!window.confirm(`Delete "${item.title}"?`)) return;
         try {
-            await deleteItem(item.id);
+            await deleteItem(item.id, currentUser.id);
             showSuccess('Item deleted successfully.');
             await refreshData();
         } catch (error) {
