@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import ItemFormModal from '@/components/ItemFormModal';
 import ChatModal from '@/components/ChatModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { createItem, getItems, getMyClaims, startClaim, subscribeToClaims, subscribeToItems, updateClaimStatus, } from '@/lib/campusApi';
+import { createItem, getItems, getMyClaims, startClaim, subscribeToClaims, subscribeToItems, updateClaimStatus, updateItemStatus, } from '@/lib/campusApi';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { showError, showSuccess } from '@/utils/toast';
 import { demoItems } from '@/data/demoItems';
@@ -86,7 +86,13 @@ const Index = () => {
         const query = search.trim().toLowerCase();
         const matchesText = !query || `${item.title} ${item.category} ${item.description} ${item.location ?? ''}`.toLowerCase().includes(query);
         const matchesCategory = selectedCategory === 'All Categories' || item.category === selectedCategory;
-        return matchesText && matchesCategory && (filter === 'all' || item.type === filter);
+        const matchesTab =
+            filter === 'all'
+                ? item.status === 'active'
+                : filter === 'returned'
+                ? item.status === 'resolved'
+                : item.type === filter && item.status === 'active';
+        return matchesText && matchesCategory && matchesTab;
     }), [items, search, filter, selectedCategory]);
     const ownClaims = claims.filter((claim) => claim.claimant_id === currentUser?.id);
     const incomingClaims = claims.filter((claim) => {
@@ -135,6 +141,19 @@ const Index = () => {
         }
         finally {
             setBusyClaim(null);
+        }
+    };
+    const toggleItemReturned = async (item) => {
+        if (!item.id)
+            return;
+        const nextStatus = item.status === 'resolved' ? 'active' : 'resolved';
+        try {
+            await updateItemStatus(item.id, nextStatus);
+            showSuccess(nextStatus === 'resolved' ? 'Item marked as returned!' : 'Item marked as active again.');
+            await refresh();
+        }
+        catch (error) {
+            showError(error instanceof Error ? error.message : 'Could not update item status.');
         }
     };
     const openExistingChat = (claim) => {
@@ -196,8 +215,13 @@ const Index = () => {
                   ))}
                 </select>
                 <div className="flex items-center gap-1 rounded-xl border border-[#e1e7df] bg-white p-1 dark:border-[#2a3c32] dark:bg-[#13241b]">
-                  {['all', 'lost', 'found'].map((value) => (<button key={value} onClick={() => setFilter(value)} className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition ${filter === value ? 'bg-[#214b3b] text-white dark:bg-[#2b5e4a]' : 'text-[#728077] hover:bg-[#f1f4ef] dark:text-[#8ea594] dark:hover:bg-[#1a3024]'}`}>
-                      {value === 'all' ? 'All items' : value}
+                  {[
+                    { key: 'all', label: 'All active' },
+                    { key: 'lost', label: 'Lost' },
+                    { key: 'found', label: 'Found' },
+                    { key: 'returned', label: 'Returned' },
+                  ].map(({ key, label }) => (<button key={key} onClick={() => setFilter(key)} className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition ${filter === key ? 'bg-[#214b3b] text-white dark:bg-[#2b5e4a]' : 'text-[#728077] hover:bg-[#f1f4ef] dark:text-[#8ea594] dark:hover:bg-[#1a3024]'}`}>
+                      {label}
                     </button>))}
                 </div>
               </div>
@@ -227,8 +251,8 @@ const Index = () => {
                             event.currentTarget.src = fallbackImage;
                         }
                     }} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" loading="lazy"/>
-                        <Badge className={`absolute left-3 top-3 border-0 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${isLost ? 'bg-[#fff3d9] text-[#956c1f] hover:bg-[#fff3d9]' : 'bg-[#e7f3e4] text-[#47744a] hover:bg-[#e7f3e4]'}`}>
-                          {isLost ? 'Lost' : 'Found'}
+                        <Badge className={`absolute left-3 top-3 border-0 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${item.status === 'resolved' ? 'bg-[#e2e8e0] text-[#56685a] dark:bg-[#1a2d21] dark:text-[#a1b8a5]' : isLost ? 'bg-[#fff3d9] text-[#956c1f] hover:bg-[#fff3d9]' : 'bg-[#e7f3e4] text-[#47744a] hover:bg-[#e7f3e4]'}`}>
+                          {item.status === 'resolved' ? 'Returned' : isLost ? 'Lost' : 'Found'}
                         </Badge>
                         {ownReport && <span className="absolute right-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-[#47634a]">Your report</span>}
                       </div>
@@ -242,10 +266,32 @@ const Index = () => {
                         </div>
                         <p className="mt-3 line-clamp-2 min-h-10 text-xs leading-5 text-[#78857b]">{item.description}</p>
                         <div className="mt-3 flex items-center gap-1.5 text-xs text-[#718078]"><MapPin size={13} className="shrink-0 text-[#79936f]"/><span className="truncate">{item.location || 'KIET campus'}</span></div>
-                        <div className="mt-4 border-t border-[#eef1ec] pt-3">
-                          {ownReport ? (<div className="flex items-center gap-2 text-xs text-[#7c897f]"><CheckCircle2 size={15} className="text-[#6f9468]"/> Your report is visible to campus</div>) : myClaim ? (<Button variant="outline" onClick={() => openExistingChat(myClaim)} className="h-9 w-full rounded-lg border-[#dce5d9] text-xs font-semibold text-[#416245]">
+                        <div className="mt-4 border-t border-[#eef1ec] pt-3 dark:border-[#203429]">
+                          {ownReport ? (
+                            <div className="flex flex-col gap-2">
+                              <div className="flex items-center justify-between text-xs text-[#7c897f] dark:text-[#8ea594]">
+                                <span className="flex items-center gap-1.5">
+                                  <CheckCircle2 size={14} className="text-[#6f9468]"/>
+                                  {item.status === 'resolved' ? 'Returned to owner' : 'Visible on campus'}
+                                </span>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant={item.status === 'resolved' ? 'outline' : 'secondary'}
+                                onClick={() => void toggleItemReturned(item)}
+                                className={`h-8 w-full rounded-lg text-xs font-semibold ${
+                                  item.status === 'resolved'
+                                    ? 'border-[#dce5d9] text-[#536657] hover:bg-[#f1f5ee] dark:border-[#2a3c32] dark:text-[#a2c89f]'
+                                    : 'bg-[#eaf3e6] text-[#2c5f38] hover:bg-[#dbebd5] dark:bg-[#1a3828] dark:text-[#9fe2ab]'
+                                }`}
+                              >
+                                <Check size={14} className="mr-1.5"/>
+                                {item.status === 'resolved' ? 'Re-open item' : 'Mark as returned'}
+                              </Button>
+                            </div>
+                          ) : myClaim ? (<Button variant="outline" onClick={() => openExistingChat(myClaim)} className="h-9 w-full rounded-lg border-[#dce5d9] text-xs font-semibold text-[#416245]">
                               <MessageCircle size={15} className="mr-2"/> {myClaim.status === 'pending' ? 'Continue conversation' : `Claim ${myClaim.status}`}
-                            </Button>) : (<Button onClick={() => void openClaimChat(item)} disabled={!isSupabaseConfigured || busyClaim === item.id} className="h-9 w-full rounded-lg bg-[#214b3b] text-xs font-semibold hover:bg-[#2a5a48]">
+                            </Button>) : (<Button onClick={() => void openClaimChat(item)} disabled={!isSupabaseConfigured || busyClaim === item.id || item.status === 'resolved'} className="h-9 w-full rounded-lg bg-[#214b3b] text-xs font-semibold hover:bg-[#2a5a48]">
                               <MessageCircle size={15} className="mr-2"/> {busyClaim === item.id ? 'Opening chat…' : isLost ? 'I found this' : 'This could be mine'}
                             </Button>)}
                         </div>
