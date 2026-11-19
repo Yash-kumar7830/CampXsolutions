@@ -8,6 +8,22 @@ import { Input } from '@/components/ui/input';
 import { showError, showSuccess } from '@/utils/toast';
 
 const initialProfile = { fullName: '', branch: '', course: '', yearOfStudy: '' };
+const courses = ['B.Tech', 'M.Tech', 'MCA', 'B. Pharm', 'MBA'];
+const branches = [
+    'CSE',
+    'CS',
+    'CSE(AI)',
+    'CSE(AIML)',
+    'CSIT',
+    'IT',
+    'CSE(CYBER SECURITY)',
+    'CSE(DATA SCIENCE)',
+    'EEE',
+    'ELCE',
+    'ECE',
+    'MECHANICAL',
+    'VLSI',
+];
 
 const LoginPage = () => {
     const { currentUser, requiresPasswordSetup, sendSignupOtp, verifyEmailOtp, sendPasswordResetOtp, updatePassword, signIn, isLoading, demoMode, signInDemo } = useAuth();
@@ -96,6 +112,12 @@ const LoginPage = () => {
     };
 
     const updateProfile = (field) => (event) => setProfile((current) => ({ ...current, [field]: event.target.value }));
+    const updateCourse = (event) => setProfile((current) => ({
+        ...current,
+        course: event.target.value,
+        branch: '',
+        yearOfStudy: '',
+    }));
     const changeMode = (nextMode) => {
         setMode(nextMode);
         setSignupStage('details');
@@ -126,7 +148,7 @@ const LoginPage = () => {
 
     return (<main className="campus-login min-h-screen">
       <div className="mx-auto grid min-h-screen max-w-[1440px] grid-cols-1 lg:grid-cols-[1.05fr_0.95fr]">
-        <section className="relative hidden overflow-hidden bg-[#102b25] px-12 py-10 text-white lg:flex lg:flex-col">
+        <section className="campus-login-hero relative hidden overflow-hidden px-12 py-10 text-white lg:flex lg:flex-col">
           <div className="absolute -right-36 -top-28 h-[530px] w-[530px] rounded-full border border-white/10"/>
           <div className="absolute -right-20 -top-12 h-[410px] w-[410px] rounded-full border border-white/10"/>
           <div className="relative flex items-center gap-3">
@@ -138,9 +160,10 @@ const LoginPage = () => {
               <span className="h-2 w-2 rounded-full bg-[#d0f16e]"/> KIET campus community
             </div>
             <h1 className="text-5xl font-semibold leading-[1.08] tracking-tight xl:text-[64px]">
-              Lost something?<br />Let&apos;s bring it <span className="font-serif italic text-[#d0f16e]">back.</span>
+              Lost Something?<br />Let&apos;s Bring It <span className="font-serif italic text-[#efffbd]">Back!</span>
             </h1>
-            <p className="mt-6 max-w-md text-base leading-7 text-white/65">A little help from your campus community can make a big difference. Find it, report it, reunite.</p>
+            <p className="mt-6 max-w-md text-lg font-semibold leading-8 text-white">Buy, Sell &amp; Rediscover Your College Essentials — All in One Place.</p>
+            <p className="mt-3 max-w-md text-base leading-7 text-white/75">A smarter way to find what you need, sell what you no longer use, and give your college essentials a second life!</p>
             <div className="mt-12 flex max-w-md items-center rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur">
               <div className="flex -space-x-2">
                 {['A', 'R', 'S', 'M'].map((initial, index) => (<div key={initial} className={`grid h-9 w-9 place-items-center rounded-full border-2 border-[#102b25] text-xs font-semibold text-[#102b25] ${['bg-[#e8b6a4]', 'bg-[#d0f16e]', 'bg-[#a8c5e3]', 'bg-[#eccd87]'][index]}`}>{initial}</div>))}
@@ -185,15 +208,27 @@ const LoginPage = () => {
               {showProfile && <div className="space-y-4 rounded-2xl border border-[#e4e8df] bg-white p-4">
                 <p className="text-sm font-semibold text-[#26392e]">Student profile</p>
                 <Input aria-label="Full name" autoComplete="name" placeholder="Full name" maxLength={100} required value={profile.fullName} onChange={updateProfile('fullName')} className="h-11 rounded-xl border-[#dfe5dc]"/>
-                <Input aria-label="Branch" placeholder="Branch (e.g. Computer Science)" maxLength={100} required value={profile.branch} onChange={updateProfile('branch')} className="h-11 rounded-xl border-[#dfe5dc]"/>
-                <Input aria-label="Course" placeholder="Course (e.g. B.Tech)" maxLength={100} required value={profile.course} onChange={updateProfile('course')} className="h-11 rounded-xl border-[#dfe5dc]"/>
-                <label className="block space-y-2 text-sm font-medium text-[#26392e]" htmlFor="year-of-study">
+                <label className="block space-y-2 text-sm font-medium text-[#26392e]" htmlFor="course">
+                  Course
+                  <select id="course" value={profile.course} onChange={updateCourse} required className="h-11 w-full rounded-xl border border-[#dfe5dc] bg-white px-3 text-sm font-normal">
+                    <option value="" disabled>Select your course</option>
+                    {courses.map((course) => <option key={course} value={course}>{course}</option>)}
+                  </select>
+                </label>
+                {profile.course === 'B.Tech' && <label className="block space-y-2 text-sm font-medium text-[#26392e]" htmlFor="branch">
+                  Branch
+                  <select id="branch" value={profile.branch} onChange={updateProfile('branch')} required className="h-11 w-full rounded-xl border border-[#dfe5dc] bg-white px-3 text-sm font-normal">
+                    <option value="" disabled>Select your branch</option>
+                    {branches.map((branch) => <option key={branch} value={branch}>{branch}</option>)}
+                  </select>
+                </label>}
+                {profile.course && <label className="block space-y-2 text-sm font-medium text-[#26392e]" htmlFor="year-of-study">
                   Year of study
                   <select id="year-of-study" value={profile.yearOfStudy} onChange={updateProfile('yearOfStudy')} required className="h-11 w-full rounded-xl border border-[#dfe5dc] bg-white px-3 text-sm font-normal">
                     <option value="" disabled>Select your year</option>
-                    {[1, 2, 3, 4].map((year) => <option key={year} value={year}>Year {year}</option>)}
+                    {Array.from({ length: profile.course === 'B.Tech' || profile.course === 'B. Pharm' ? 4 : 2 }, (_, index) => index + 1).map((year) => <option key={year} value={year}>Year {year}</option>)}
                   </select>
-                </label>
+                </label>}
                 <p className="text-xs leading-5 text-[#849087]">If this email already has an account, sign in or use password reset instead of creating another account.</p>
               </div>}
               {showEmail && <div className="space-y-2">
