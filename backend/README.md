@@ -2,7 +2,7 @@
 
 The backend is provided by Supabase: Auth for KIET email OTP verification and password accounts, Postgres for student profiles and campus services, Row Level Security for authorization, and Realtime for feed/chat updates. This folder contains the SQL required to set up those services.
 
-Apply the SQL files in [`supabase/migrations/`](./supabase/migrations/) in filename order through the Supabase SQL Editor. They create the student profile, lost-and-found, marketplace, facility report, and survey tables and their RLS policies. Student profiles are private to their owner; facility reports and survey results are private to authorized staff, while student access is restricted to authenticated `@kiet.edu` accounts.
+Apply the SQL files in [`supabase/migrations/`](./supabase/migrations/) in filename order through the Supabase SQL Editor. They create the student profile, lost-and-found, marketplace, facility report, and survey tables and their RLS policies. Student profiles are private to their owner; returned and archived item reports are visible only to their owner; facility reports and survey results are private to authorized staff, while student access is restricted to authenticated `@kiet.edu` accounts.
 
 Students may submit reports about any campus facility or service problem, but cannot select or update submitted reports. Only staff can read those reports and move them through open, in-progress, and resolved statuses. Only staff can create, close, or reopen surveys; students can view active surveys and submit one response to each.
 
