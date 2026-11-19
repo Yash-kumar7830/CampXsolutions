@@ -191,7 +191,7 @@ const LoginPage = () => {
                   Year of study
                   <select id="year-of-study" value={profile.yearOfStudy} onChange={updateProfile('yearOfStudy')} required className="h-11 w-full rounded-xl border border-[#dfe5dc] bg-white px-3 text-sm font-normal">
                     <option value="" disabled>Select your year</option>
-                    {[1, 2, 3, 4, 5, 6].map((year) => <option key={year} value={year}>Year {year}</option>)}
+                    {[1, 2, 3, 4].map((year) => <option key={year} value={year}>Year {year}</option>)}
                   </select>
                 </label>
                 <p className="text-xs leading-5 text-[#849087]">If this email already has an account, sign in or use password reset instead of creating another account.</p>
