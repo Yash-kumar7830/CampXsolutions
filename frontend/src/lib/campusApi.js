@@ -33,6 +33,19 @@ export async function createItem(item) {
     if (error)
         throw new Error(error.message);
 }
+export async function deleteItem(itemId, userId) {
+    const { data, error } = await client()
+        .from('items')
+        .delete()
+        .eq('id', itemId)
+        .eq('user_id', userId)
+        .select('id')
+        .maybeSingle();
+    if (error)
+        throw new Error(error.message);
+    if (!data)
+        throw new Error('This item could not be found or you do not have permission to delete it.');
+}
 export async function createFacilityReport(report) {
     const { error } = await client().from('facility_reports').insert({
         report_type: report.type,

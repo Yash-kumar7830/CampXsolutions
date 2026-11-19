@@ -3,10 +3,11 @@ import { Bell, Check, CheckCircle2, MapPin, MessageCircle, Plus, Search, ShieldC
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import ItemFormModal from '@/components/ItemFormModal';
 import ChatModal from '@/components/ChatModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { createItem, getItems, getMyClaims, startClaim, subscribeToClaims, subscribeToItems, updateClaimStatus, } from '@/lib/campusApi';
+import { createItem, deleteItem, getItems, getMyClaims, startClaim, subscribeToClaims, subscribeToItems, updateClaimStatus, } from '@/lib/campusApi';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { showError, showSuccess } from '@/utils/toast';
 import { demoItems } from '@/data/demoItems';
@@ -33,6 +34,7 @@ const Index = () => {
     const [filter, setFilter] = useState('all');
     const [loading, setLoading] = useState(true);
     const [busyClaim, setBusyClaim] = useState(null);
+    const [busyReturned, setBusyReturned] = useState(null);
     const [activeChat, setActiveChat] = useState(null);
     const refresh = useCallback(async () => {
         if (!currentUser)
@@ -118,6 +120,22 @@ const Index = () => {
         }
         finally {
             setBusyClaim(null);
+        }
+    };
+    const markItemReturned = async (item) => {
+        if (!currentUser)
+            return;
+        setBusyReturned(item.id);
+        try {
+            await deleteItem(item.id, currentUser.id);
+            showSuccess('Item marked as returned and removed from the reports.');
+            await refresh();
+        }
+        catch (error) {
+            showError(error instanceof Error ? error.message : 'Could not mark this item as returned.');
+        }
+        finally {
+            setBusyReturned(null);
         }
     };
     const openExistingChat = (claim) => {
@@ -214,7 +232,30 @@ const Index = () => {
                         <p className="mt-3 line-clamp-2 min-h-10 text-xs leading-5 text-[#78857b]">{item.description}</p>
                         <div className="mt-3 flex items-center gap-1.5 text-xs text-[#718078]"><MapPin size={13} className="shrink-0 text-[#79936f]"/><span className="truncate">{item.location || 'KIET campus'}</span></div>
                         <div className="mt-4 border-t border-[#eef1ec] pt-3">
-                          {ownReport ? (<div className="flex items-center gap-2 text-xs text-[#7c897f]"><CheckCircle2 size={15} className="text-[#6f9468]"/> Your report is visible to campus</div>) : myClaim ? (<Button variant="outline" onClick={() => openExistingChat(myClaim)} className="h-9 w-full rounded-lg border-[#dce5d9] text-xs font-semibold text-[#416245]">
+                          {ownReport ? (<div className="flex flex-col gap-2">
+                            <div className="flex items-center gap-2 text-xs text-[#7c897f]"><CheckCircle2 size={15} className="text-[#6f9468]"/> Your report is visible to campus</div>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm" disabled={busyReturned === item.id} className="w-full rounded-lg border-[#dce5d9] text-xs font-semibold text-[#416245]">
+                                  <CheckCircle2 size={15} className="mr-2"/> Mark as returned
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Mark this item as returned?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This permanently deletes {item.title} and its related claim conversations from the database.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction disabled={busyReturned === item.id} onClick={() => void markItemReturned(item)}>
+                                    {busyReturned === item.id ? 'Removing...' : 'Mark as returned'}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>) : myClaim ? (<Button variant="outline" onClick={() => openExistingChat(myClaim)} className="h-9 w-full rounded-lg border-[#dce5d9] text-xs font-semibold text-[#416245]">
                               <MessageCircle size={15} className="mr-2"/> {myClaim.status === 'pending' ? 'Continue conversation' : `Claim ${myClaim.status}`}
                             </Button>) : (<Button onClick={() => void openClaimChat(item)} disabled={!isSupabaseConfigured || busyClaim === item.id} className="h-9 w-full rounded-lg bg-[#214b3b] text-xs font-semibold hover:bg-[#2a5a48]">
                               <MessageCircle size={15} className="mr-2"/> {busyClaim === item.id ? 'Opening chat…' : isLost ? 'I found this' : 'This could be mine'}
