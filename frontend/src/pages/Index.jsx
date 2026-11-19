@@ -25,12 +25,28 @@ function timeAgo(isoDate) {
         return `${hours}h ago`;
     return `${Math.floor(hours / 24)}d ago`;
 }
+const CATEGORIES = [
+    'All Categories',
+    'Electronics & Gadgets',
+    'ID Cards & Documents',
+    'Keys & Keychains',
+    'Bags & Backpacks',
+    'Books & Notebooks',
+    'Clothing & Wearables',
+    'Eyewear & Watches',
+    'Bottles & Lunchboxes',
+    'Money & Wallets',
+    'Sports & Fitness',
+    'Other Essentials',
+];
+
 const Index = () => {
     const { currentUser } = useAuth();
     const [items, setItems] = useState([]);
     const [claims, setClaims] = useState([]);
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('all');
+    const [selectedCategory, setSelectedCategory] = useState('All Categories');
     const [loading, setLoading] = useState(true);
     const [busyClaim, setBusyClaim] = useState(null);
     const [activeChat, setActiveChat] = useState(null);
@@ -69,8 +85,9 @@ const Index = () => {
     const visibleItems = useMemo(() => items.filter((item) => {
         const query = search.trim().toLowerCase();
         const matchesText = !query || `${item.title} ${item.category} ${item.description} ${item.location ?? ''}`.toLowerCase().includes(query);
-        return matchesText && (filter === 'all' || item.type === filter);
-    }), [items, search, filter]);
+        const matchesCategory = selectedCategory === 'All Categories' || item.category === selectedCategory;
+        return matchesText && matchesCategory && (filter === 'all' || item.type === filter);
+    }), [items, search, filter, selectedCategory]);
     const ownClaims = claims.filter((claim) => claim.claimant_id === currentUser?.id);
     const incomingClaims = claims.filter((claim) => {
         const item = items.find((entry) => entry.id === claim.report_id);
@@ -161,13 +178,25 @@ const Index = () => {
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#769071]">Community board</p>
                 <h2 className="mt-1 text-2xl font-semibold tracking-tight">Recently reported</h2>
               </div>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <div className="relative min-w-0 sm:w-64">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="relative min-w-0 sm:w-56">
                   <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8b978e]"/>
-                  <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search items or locations" className="h-10 rounded-xl border-[#e1e7df] bg-white pl-9 shadow-none focus-visible:ring-[#668362]"/>
+                  <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search items or locations" className="h-10 rounded-xl border-[#e1e7df] bg-white pl-9 shadow-none focus-visible:ring-[#668362] dark:border-[#2a3c32] dark:bg-[#13241b] dark:text-white"/>
                 </div>
-                <div className="flex items-center gap-1 rounded-xl border border-[#e1e7df] bg-white p-1">
-                  {['all', 'lost', 'found'].map((value) => (<button key={value} onClick={() => setFilter(value)} className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition ${filter === value ? 'bg-[#214b3b] text-white' : 'text-[#728077] hover:bg-[#f1f4ef]'}`}>
+                <select
+                  aria-label="Filter by category"
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="h-10 rounded-xl border border-[#e1e7df] bg-white px-3 text-xs text-[#536657] shadow-none outline-none focus:ring-1 focus:ring-[#668362] dark:border-[#2a3c32] dark:bg-[#13241b] dark:text-[#a2c89f]"
+                >
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex items-center gap-1 rounded-xl border border-[#e1e7df] bg-white p-1 dark:border-[#2a3c32] dark:bg-[#13241b]">
+                  {['all', 'lost', 'found'].map((value) => (<button key={value} onClick={() => setFilter(value)} className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition ${filter === value ? 'bg-[#214b3b] text-white dark:bg-[#2b5e4a]' : 'text-[#728077] hover:bg-[#f1f4ef] dark:text-[#8ea594] dark:hover:bg-[#1a3024]'}`}>
                       {value === 'all' ? 'All items' : value}
                     </button>))}
                 </div>
