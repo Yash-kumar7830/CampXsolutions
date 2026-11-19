@@ -81,22 +81,57 @@ export async function createFacilityReport(report) {
 export async function getMarketplaceListings() {
     const { data, error } = await client()
         .from('marketplace_listings')
-        .select('id,title,category,description,price,condition,contact,status,seller_id,created_at')
+        .select('id,title,category,description,price,condition,image_urls,status,seller_id,created_at')
         .order('created_at', { ascending: false });
     return unwrap({ data: data ?? [], error });
 }
-export async function createMarketplaceListing(listing, sellerId) {
-    const { error } = await client().from('marketplace_listings').insert({
-        title: listing.title.trim(),
-        category: listing.category.trim(),
-        description: listing.description.trim(),
-        price: Number(listing.price),
-        condition: listing.condition,
-        contact: listing.contact.trim(),
-        seller_id: sellerId,
-    });
-    if (error)
-        throw new Error(error.message);
+export async function createMarketplaceListing(listing, sellerId, images = []) {
+    if (images.length > 3)
+        throw new Error('You can upload up to 3 item photos.');
+    if (images.some((image) => !['image/jpeg', 'image/png', 'image/webp'].includes(image.type)))
+        throw new Error('Marketplace photos must be JPEG, PNG, or WebP images.');
+    if (images.some((image) => image.size > 5 * 1024 * 1024))
+        throw new Error('Each marketplace photo must be 5 MB or smaller.');
+    const db = client();
+    const uploadedPaths = [];
+    try {
+        const imageUrls = [];
+        for (const [index, image] of images.entries()) {
+            const extension = image.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
+            const path = `${sellerId}/${crypto.randomUUID()}-${index}.${extension}`;
+            const { error: uploadError } = await db.storage
+                .from('marketplace-images')
+                .upload(path, image, { cacheControl: '3600', contentType: image.type, upsert: false });
+            if (uploadError)
+                throw new Error(uploadError.message);
+            uploadedPaths.push(path);
+            imageUrls.push(db.storage.from('marketplace-images').getPublicUrl(path).data.publicUrl);
+        }
+        const { error } = await db.from('marketplace_listings').insert({
+            title: listing.title.trim(),
+            category: listing.category.trim(),
+            description: listing.description.trim(),
+            price: Number(listing.price),
+            condition: listing.condition,
+            contact: listing.contact.trim(),
+            image_urls: imageUrls,
+            seller_id: sellerId,
+        });
+        if (error)
+            throw new Error(error.message);
+    }
+    catch (error) {
+        if (uploadedPaths.length) {
+            const { error: cleanupError } = await db.storage.from('marketplace-images').remove(uploadedPaths);
+            if (cleanupError)
+                console.warn('Could not remove marketplace photos after listing creation failed:', cleanupError.message);
+        }
+        throw error;
+    }
+}
+export async function expressMarketplaceInterest(listingId) {
+    const { data, error } = await client().rpc('express_marketplace_interest', { p_listing_id: listingId });
+    return unwrap({ data, error });
 }
 export async function updateMarketplaceListingStatus(listingId, status) {
     const { error } = await client()

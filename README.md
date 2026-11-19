@@ -9,10 +9,7 @@ Supabase provides the managed backend services (Auth, Postgres, and Realtime). T
 
 ## Backend setup
 
-1. Create a Supabase project and run the SQL files, in filename order, from `backend/supabase/migrations/` in its SQL Editor:
-   - [`20261027000000_initial_schema.sql`](./backend/supabase/migrations/20261027000000_initial_schema.sql)
-   - [`20261112000000_marketplace_surveys_admin.sql`](./backend/supabase/migrations/20261112000000_marketplace_surveys_admin.sql)
-   - [`20261116000000_student_profiles.sql`](./backend/supabase/migrations/20261116000000_student_profiles.sql)
+1. Create a Supabase project and run **all** SQL files, in filename order, from [`backend/supabase/migrations/`](./backend/supabase/migrations/) in its SQL Editor. The marketplace migrations set up photo storage, interest-gated seller contact access, and the required listing permissions.
 2. In **Authentication → Providers → Email**, enable email sign-in and configure the **Magic Link** email template to show the one-time token (`{{ .Token }}`) instead of only a confirmation link. The app verifies the email OTP before asking the user to create a password.
 3. In **Authentication → URL Configuration**, add your local and production app URLs.
 4. In **Authentication → Users**, set staff members' `app_metadata` to `{"role":"admin"}` using the Supabase Dashboard or a trusted server-side admin tool. Never add a service-role key to the frontend. Sign out and back in after changing a user's role.
@@ -47,7 +44,7 @@ The schema creates lost-and-found items, claims, private messages, marketplace l
 - Users can report a lost or found item with its category and campus location.
 - Students can submit a campus facility issue or feedback report, including category, location, details, and issue urgency.
 - A claim starts a private realtime conversation between the claimant and report owner.
-- Students can list used items, set a price and contact method, and mark their own listings sold.
+- Students can list used items with up to three photos, set a price and phone number, and mark their own listings sold. A buyer records interest with **Buy / Show interest** before the seller's number is revealed.
 - Staff can review and update facility-report status, publish single-choice surveys, close surveys, and review response totals.
 - Only staff users with the trusted Supabase `app_metadata.role = "admin"` claim can create or manage surveys and read/update private facility reports. Students can browse active surveys and submit one response per survey; they cannot read facility reports or change report status.
 - Campus problem reporting and surveys are grouped together at `/reports`; facility reporting is separate from the Lost & Found page.
