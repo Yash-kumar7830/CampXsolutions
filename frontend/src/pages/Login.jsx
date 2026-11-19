@@ -148,21 +148,22 @@ const LoginPage = () => {
 
     return (<main className="campus-login min-h-screen">
       <div className="mx-auto grid min-h-screen max-w-[1440px] grid-cols-1 lg:grid-cols-[1.05fr_0.95fr]">
-        <section className="relative hidden overflow-hidden bg-[#102b25] px-12 py-10 text-white lg:flex lg:flex-col">
+        <section className="campus-login-hero relative hidden overflow-hidden px-12 py-10 text-white lg:flex lg:flex-col">
           <div className="absolute -right-36 -top-28 h-[530px] w-[530px] rounded-full border border-white/10"/>
           <div className="absolute -right-20 -top-12 h-[410px] w-[410px] rounded-full border border-white/10"/>
           <div className="relative flex items-center gap-3">
             <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[#d0f16e] text-[#102b25]"><MapPin size={22} strokeWidth={2.8}/></div>
-            <span className="text-xl font-bold tracking-tight">campXsolutions</span>
+            <span className="text-xl font-bold tracking-tight">CampXsolutions</span>
           </div>
           <div className="relative my-auto max-w-xl pb-10">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-medium text-[#d0f16e]">
               <span className="h-2 w-2 rounded-full bg-[#d0f16e]"/> KIET campus community
             </div>
             <h1 className="text-5xl font-semibold leading-[1.08] tracking-tight xl:text-[64px]">
-              Lost something?<br />Let&apos;s bring it <span className="font-serif italic text-[#d0f16e]">back.</span>
+              Lost Something?<br />Let&apos;s Bring It <span className="font-serif italic text-[#efffbd]">Back!</span>
             </h1>
-            <p className="mt-6 max-w-md text-base leading-7 text-white/65">A little help from your campus community can make a big difference. Find it, report it, reunite.</p>
+            <p className="mt-6 max-w-md text-lg font-semibold leading-8 text-white">Buy, Sell &amp; Rediscover Your College Essentials — All in One Place.</p>
+            <p className="mt-3 max-w-md text-base leading-7 text-white/75">A smarter way to find what you need, sell what you no longer use, and give your college essentials a second life!</p>
             <div className="mt-12 flex max-w-md items-center rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur">
               <div className="flex -space-x-2">
                 {['A', 'R', 'S', 'M'].map((initial, index) => (<div key={initial} className={`grid h-9 w-9 place-items-center rounded-full border-2 border-[#102b25] text-xs font-semibold text-[#102b25] ${['bg-[#e8b6a4]', 'bg-[#d0f16e]', 'bg-[#a8c5e3]', 'bg-[#eccd87]'][index]}`}>{initial}</div>))}
@@ -181,7 +182,7 @@ const LoginPage = () => {
         <section className="flex min-h-screen flex-col bg-[#f7f8f4] px-6 py-7 sm:px-10 lg:px-14">
           <div className="flex items-center gap-3 lg:invisible">
             <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#173b30] text-[#d0f16e]"><MapPin size={20}/></div>
-            <span className="text-lg font-bold text-[#173b30]">campXsolutions</span>
+            <span className="text-lg font-bold text-[#173b30]">CampXsolutions</span>
           </div>
           <div className="mx-auto flex w-full max-w-[440px] flex-1 flex-col justify-center py-12">
             <div className="mb-7">
@@ -262,7 +263,7 @@ const LoginPage = () => {
               <p className="text-xs leading-5 text-[#78847b]">Your password is managed securely by Supabase.</p>
             </div>
           </div>
-          <p className="text-center text-xs text-[#9ca69e] lg:text-right">campXsolutions · A safer way to find what matters</p>
+          <p className="text-center text-xs text-[#9ca69e] lg:text-right">CampXsolutions · A safer way to find what matters</p>
         </section>
       </div>
     </main>);

@@ -14,9 +14,31 @@ export async function getItems() {
     const { data, error } = await client()
         .from('items')
         .select('id,type,category,title,description,status,campus_id,created_at,user_id,image_url,location')
-        .eq('status', 'active')
+        .in('status', ['active', 'resolved', 'archived'])
         .order('created_at', { ascending: false });
     return unwrap({ data: (data ?? []), error });
+}
+export async function archiveOldItems() {
+    const { data, error } = await client().rpc('archive_old_unclaimed_items');
+    if (error)
+        console.warn('Auto-archive check:', error.message);
+    return data ?? 0;
+}
+export async function updateItemStatus(itemId, status) {
+    const { error } = await client()
+        .from('items')
+        .update({ status })
+        .eq('id', itemId);
+    if (error)
+        throw new Error(error.message);
+}
+export async function deleteItem(itemId) {
+    const { error } = await client()
+        .from('items')
+        .delete()
+        .eq('id', itemId);
+    if (error)
+        throw new Error(error.message);
 }
 export async function createItem(item) {
     const { error } = await client().from('items').insert({

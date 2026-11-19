@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Bell, Check, CheckCircle2, MapPin, MessageCircle, Plus, Search, ShieldCheck, SlidersHorizontal, Sparkles, X, } from 'lucide-react';
+import { Bell, Check, CheckCircle2, MapPin, MessageCircle, Plus, Search, ShieldCheck, SlidersHorizontal, Sparkles, Trash2, X, } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +7,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import ItemFormModal from '@/components/ItemFormModal';
 import ChatModal from '@/components/ChatModal';
 import { useAuth } from '@/contexts/AuthContext';
+<<<<<<< HEAD
 import { createItem, deleteItem, getItems, getMyClaims, startClaim, subscribeToClaims, subscribeToItems, updateClaimStatus, } from '@/lib/campusApi';
+=======
+import { archiveOldItems, createItem, deleteItem, getItems, getMyClaims, startClaim, subscribeToClaims, subscribeToItems, updateClaimStatus, updateItemStatus, } from '@/lib/campusApi';
+>>>>>>> dec0b634f579602640f3784b12d47a6807ea7e86
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { showError, showSuccess } from '@/utils/toast';
 import { demoItems } from '@/data/demoItems';
@@ -26,12 +30,28 @@ function timeAgo(isoDate) {
         return `${hours}h ago`;
     return `${Math.floor(hours / 24)}d ago`;
 }
+const CATEGORIES = [
+    'All Categories',
+    'Electronics & Gadgets',
+    'ID Cards & Documents',
+    'Keys & Keychains',
+    'Bags & Backpacks',
+    'Books & Notebooks',
+    'Clothing & Wearables',
+    'Eyewear & Watches',
+    'Bottles & Lunchboxes',
+    'Money & Wallets',
+    'Sports & Fitness',
+    'Other Essentials',
+];
+
 const Index = () => {
     const { currentUser } = useAuth();
     const [items, setItems] = useState([]);
     const [claims, setClaims] = useState([]);
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('all');
+    const [selectedCategory, setSelectedCategory] = useState('All Categories');
     const [loading, setLoading] = useState(true);
     const [busyClaim, setBusyClaim] = useState(null);
     const [busyReturned, setBusyReturned] = useState(null);
@@ -46,6 +66,7 @@ const Index = () => {
             return;
         }
         try {
+            await archiveOldItems();
             const [itemRows, claimRows] = await Promise.all([getItems(), getMyClaims(currentUser.id)]);
             setItems(itemRows);
             setClaims(claimRows);
@@ -71,8 +92,17 @@ const Index = () => {
     const visibleItems = useMemo(() => items.filter((item) => {
         const query = search.trim().toLowerCase();
         const matchesText = !query || `${item.title} ${item.category} ${item.description} ${item.location ?? ''}`.toLowerCase().includes(query);
-        return matchesText && (filter === 'all' || item.type === filter);
-    }), [items, search, filter]);
+        const matchesCategory = selectedCategory === 'All Categories' || item.category === selectedCategory;
+        const matchesTab =
+            filter === 'all'
+                ? item.status === 'active'
+                : filter === 'returned'
+                ? item.status === 'resolved'
+                : filter === 'archived'
+                ? item.status === 'archived'
+                : item.type === filter && item.status === 'active';
+        return matchesText && matchesCategory && matchesTab;
+    }), [items, search, filter, selectedCategory]);
     const ownClaims = claims.filter((claim) => claim.claimant_id === currentUser?.id);
     const incomingClaims = claims.filter((claim) => {
         const item = items.find((entry) => entry.id === claim.report_id);
@@ -122,6 +152,7 @@ const Index = () => {
             setBusyClaim(null);
         }
     };
+<<<<<<< HEAD
     const markItemReturned = async (item) => {
         if (!currentUser)
             return;
@@ -136,6 +167,34 @@ const Index = () => {
         }
         finally {
             setBusyReturned(null);
+=======
+    const toggleItemReturned = async (item) => {
+        if (!item.id)
+            return;
+        const nextStatus = item.status === 'resolved' ? 'active' : 'resolved';
+        try {
+            await updateItemStatus(item.id, nextStatus);
+            showSuccess(nextStatus === 'resolved' ? 'Item marked as returned!' : 'Item marked as active again.');
+            await refresh();
+        }
+        catch (error) {
+            showError(error instanceof Error ? error.message : 'Could not update item status.');
+        }
+    };
+    const handleDeleteItem = async (item) => {
+        if (!item.id)
+            return;
+        const confirmed = window.confirm(`Are you sure you want to delete "${item.title}"? This cannot be undone.`);
+        if (!confirmed)
+            return;
+        try {
+            await deleteItem(item.id);
+            showSuccess(`"${item.title}" was deleted successfully.`);
+            await refresh();
+        }
+        catch (error) {
+            showError(error instanceof Error ? error.message : 'Could not delete item.');
+>>>>>>> dec0b634f579602640f3784b12d47a6807ea7e86
         }
     };
     const openExistingChat = (claim) => {
@@ -143,7 +202,7 @@ const Index = () => {
         if (item)
             setActiveChat({ item, claim });
     };
-    return (<main className="min-h-screen bg-[#f7f8f5] pb-12 text-[#1d2d24]">
+    return (<main className="min-h-screen bg-[#f7f8f5] pb-12 text-[#1d2d24] dark:bg-[#0d1a13] dark:text-[#d4e8d0]">
       <div className="mx-auto max-w-[1320px] px-4 py-7 sm:px-7 lg:px-10">
         {!isSupabaseConfigured && (<div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-5 text-amber-900">
         Sample lost-and-found reports are shown in demo mode. Claims and realtime chat require a configured Supabase backend.
@@ -179,14 +238,32 @@ const Index = () => {
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#769071]">Community board</p>
                 <h2 className="mt-1 text-2xl font-semibold tracking-tight">Recently reported</h2>
               </div>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <div className="relative min-w-0 sm:w-64">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="relative min-w-0 sm:w-56">
                   <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8b978e]"/>
-                  <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search items or locations" className="h-10 rounded-xl border-[#e1e7df] bg-white pl-9 shadow-none focus-visible:ring-[#668362]"/>
+                  <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search items or locations" className="h-10 rounded-xl border-[#e1e7df] bg-white pl-9 shadow-none focus-visible:ring-[#668362] dark:border-[#2a3c32] dark:bg-[#13241b] dark:text-white"/>
                 </div>
-                <div className="flex items-center gap-1 rounded-xl border border-[#e1e7df] bg-white p-1">
-                  {['all', 'lost', 'found'].map((value) => (<button key={value} onClick={() => setFilter(value)} className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition ${filter === value ? 'bg-[#214b3b] text-white' : 'text-[#728077] hover:bg-[#f1f4ef]'}`}>
-                      {value === 'all' ? 'All items' : value}
+                <select
+                  aria-label="Filter by category"
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="h-10 rounded-xl border border-[#e1e7df] bg-white px-3 text-xs text-[#536657] shadow-none outline-none focus:ring-1 focus:ring-[#668362] dark:border-[#2a3c32] dark:bg-[#13241b] dark:text-[#a2c89f]"
+                >
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex items-center gap-1 rounded-xl border border-[#e1e7df] bg-white p-1 dark:border-[#2a3c32] dark:bg-[#13241b]">
+                  {[
+                    { key: 'all', label: 'All active' },
+                    { key: 'lost', label: 'Lost' },
+                    { key: 'found', label: 'Found' },
+                    { key: 'returned', label: 'Returned' },
+                    { key: 'archived', label: 'Archived' },
+                  ].map(({ key, label }) => (<button key={key} onClick={() => setFilter(key)} className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition ${filter === key ? 'bg-[#214b3b] text-white dark:bg-[#2b5e4a]' : 'text-[#728077] hover:bg-[#f1f4ef] dark:text-[#8ea594] dark:hover:bg-[#1a3024]'}`}>
+                      {label}
                     </button>))}
                 </div>
               </div>
@@ -216,8 +293,8 @@ const Index = () => {
                             event.currentTarget.src = fallbackImage;
                         }
                     }} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" loading="lazy"/>
-                        <Badge className={`absolute left-3 top-3 border-0 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${isLost ? 'bg-[#fff3d9] text-[#956c1f] hover:bg-[#fff3d9]' : 'bg-[#e7f3e4] text-[#47744a] hover:bg-[#e7f3e4]'}`}>
-                          {isLost ? 'Lost' : 'Found'}
+                        <Badge className={`absolute left-3 top-3 border-0 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${item.status === 'archived' ? 'bg-zinc-100 text-zinc-600 dark:bg-zinc-900 dark:text-zinc-400' : item.status === 'resolved' ? 'bg-[#e2e8e0] text-[#56685a] dark:bg-[#1a2d21] dark:text-[#a1b8a5]' : isLost ? 'bg-[#fff3d9] text-[#956c1f] hover:bg-[#fff3d9]' : 'bg-[#e7f3e4] text-[#47744a] hover:bg-[#e7f3e4]'}`}>
+                          {item.status === 'archived' ? 'Archived (30d+)' : item.status === 'resolved' ? 'Returned' : isLost ? 'Lost' : 'Found'}
                         </Badge>
                         {ownReport && <span className="absolute right-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-[#47634a]">Your report</span>}
                       </div>
@@ -231,6 +308,7 @@ const Index = () => {
                         </div>
                         <p className="mt-3 line-clamp-2 min-h-10 text-xs leading-5 text-[#78857b]">{item.description}</p>
                         <div className="mt-3 flex items-center gap-1.5 text-xs text-[#718078]"><MapPin size={13} className="shrink-0 text-[#79936f]"/><span className="truncate">{item.location || 'KIET campus'}</span></div>
+<<<<<<< HEAD
                         <div className="mt-4 border-t border-[#eef1ec] pt-3">
                           {ownReport ? (<div className="flex flex-col gap-2">
                             <div className="flex items-center gap-2 text-xs text-[#7c897f]"><CheckCircle2 size={15} className="text-[#6f9468]"/> Your report is visible to campus</div>
@@ -256,8 +334,42 @@ const Index = () => {
                               </AlertDialogContent>
                             </AlertDialog>
                           </div>) : myClaim ? (<Button variant="outline" onClick={() => openExistingChat(myClaim)} className="h-9 w-full rounded-lg border-[#dce5d9] text-xs font-semibold text-[#416245]">
+=======
+                        <div className="mt-4 border-t border-[#eef1ec] pt-3 dark:border-[#203429]">
+                          {ownReport ? (
+                            <div className="flex flex-col gap-2">
+                              <div className="flex items-center justify-between text-xs text-[#7c897f] dark:text-[#8ea594]">
+                                <span className="flex items-center gap-1.5">
+                                  <CheckCircle2 size={14} className="text-[#6f9468]"/>
+                                  {item.status === 'resolved' ? 'Returned to owner' : 'Visible on campus'}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => void handleDeleteItem(item)}
+                                  className="flex items-center gap-1 text-[11px] text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition"
+                                  title="Delete this report"
+                                >
+                                  <Trash2 size={13}/> Delete
+                                </button>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant={item.status === 'resolved' ? 'outline' : 'secondary'}
+                                onClick={() => void toggleItemReturned(item)}
+                                className={`h-8 w-full rounded-lg text-xs font-semibold ${
+                                  item.status === 'resolved'
+                                    ? 'border-[#dce5d9] text-[#536657] hover:bg-[#f1f5ee] dark:border-[#2a3c32] dark:text-[#a2c89f]'
+                                    : 'bg-[#eaf3e6] text-[#2c5f38] hover:bg-[#dbebd5] dark:bg-[#1a3828] dark:text-[#9fe2ab]'
+                                }`}
+                              >
+                                <Check size={14} className="mr-1.5"/>
+                                {item.status === 'resolved' ? 'Re-open item' : 'Mark as returned'}
+                              </Button>
+                            </div>
+                          ) : myClaim ? (<Button variant="outline" onClick={() => openExistingChat(myClaim)} className="h-9 w-full rounded-lg border-[#dce5d9] text-xs font-semibold text-[#416245]">
+>>>>>>> dec0b634f579602640f3784b12d47a6807ea7e86
                               <MessageCircle size={15} className="mr-2"/> {myClaim.status === 'pending' ? 'Continue conversation' : `Claim ${myClaim.status}`}
-                            </Button>) : (<Button onClick={() => void openClaimChat(item)} disabled={!isSupabaseConfigured || busyClaim === item.id} className="h-9 w-full rounded-lg bg-[#214b3b] text-xs font-semibold hover:bg-[#2a5a48]">
+                            </Button>) : (<Button onClick={() => void openClaimChat(item)} disabled={!isSupabaseConfigured || busyClaim === item.id || item.status === 'resolved'} className="h-9 w-full rounded-lg bg-[#214b3b] text-xs font-semibold hover:bg-[#2a5a48]">
                               <MessageCircle size={15} className="mr-2"/> {busyClaim === item.id ? 'Opening chat…' : isLost ? 'I found this' : 'This could be mine'}
                             </Button>)}
                         </div>
