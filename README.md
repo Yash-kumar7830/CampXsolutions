@@ -1,4 +1,4 @@
-# campXsolutions
+# CampXsolutions
 
 campXsolutions is a KIET-only campus community app with three student services: lost-and-found, a student-to-student pre-owned marketplace, and private campus facility reports plus management-created surveys. The project is organized into separate frontend and backend folders:
 
