@@ -43,6 +43,20 @@ const itemFormSchema = z.object({
     }),
     image_url: z.string().url({ message: "Invalid URL format" }).optional().or(z.literal('')),
 });
+const itemCategories = [
+    'Electronics & Gadgets',
+    'ID Cards & Documents',
+    'Keys & Keychains',
+    'Bags & Backpacks',
+    'Books & Notebooks',
+    'Clothing & Wearables',
+    'Eyewear & Watches',
+    'Bottles & Lunchboxes',
+    'Money & Wallets',
+    'Sports & Fitness',
+    'Other Essentials',
+];
+
 const ItemFormModal = ({ children, initialType = 'lost', initialItem, onItemSubmit, open, onOpenChange }) => {
     // Use internal state if not controlled externally
     const [internalIsOpen, setInternalIsOpen] = useState(false);
@@ -158,7 +172,21 @@ const ItemFormModal = ({ children, initialType = 'lost', initialItem, onItemSubm
 
           <div className="grid gap-2">
             <Label htmlFor="category">Category</Label>
-            <Input id="category" placeholder="e.g., Electronics, Clothing, Personal Items" {...form.register('category')}/>
+            <Select
+              onValueChange={(value) => form.setValue('category', value, { shouldValidate: true })}
+              value={form.watch('category')}
+            >
+              <SelectTrigger id="category">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {itemCategories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {form.formState.errors.category && (<p className="text-sm text-red-500">{form.formState.errors.category.message}</p>)}
           </div>
 
