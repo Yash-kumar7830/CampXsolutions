@@ -8,6 +8,22 @@ import { Input } from '@/components/ui/input';
 import { showError, showSuccess } from '@/utils/toast';
 
 const initialProfile = { fullName: '', branch: '', course: '', yearOfStudy: '' };
+const courses = ['B.Tech', 'M.Tech', 'MCA', 'B. Pharm', 'MBA'];
+const branches = [
+    'CSE',
+    'CS',
+    'CSE(AI)',
+    'CSE(AIML)',
+    'CSIT',
+    'IT',
+    'CSE(CYBER SECURITY)',
+    'CSE(DATA SCIENCE)',
+    'EEE',
+    'ELCE',
+    'ECE',
+    'MECHANICAL',
+    'VLSI',
+];
 
 const LoginPage = () => {
     const { currentUser, requiresPasswordSetup, sendSignupOtp, verifyEmailOtp, sendPasswordResetOtp, updatePassword, signIn, isLoading, demoMode, signInDemo } = useAuth();
@@ -96,6 +112,12 @@ const LoginPage = () => {
     };
 
     const updateProfile = (field) => (event) => setProfile((current) => ({ ...current, [field]: event.target.value }));
+    const updateCourse = (event) => setProfile((current) => ({
+        ...current,
+        course: event.target.value,
+        branch: '',
+        yearOfStudy: '',
+    }));
     const changeMode = (nextMode) => {
         setMode(nextMode);
         setSignupStage('details');
@@ -185,15 +207,27 @@ const LoginPage = () => {
               {showProfile && <div className="space-y-4 rounded-2xl border border-[#e4e8df] bg-white p-4">
                 <p className="text-sm font-semibold text-[#26392e]">Student profile</p>
                 <Input aria-label="Full name" autoComplete="name" placeholder="Full name" maxLength={100} required value={profile.fullName} onChange={updateProfile('fullName')} className="h-11 rounded-xl border-[#dfe5dc]"/>
-                <Input aria-label="Branch" placeholder="Branch (e.g. Computer Science)" maxLength={100} required value={profile.branch} onChange={updateProfile('branch')} className="h-11 rounded-xl border-[#dfe5dc]"/>
-                <Input aria-label="Course" placeholder="Course (e.g. B.Tech)" maxLength={100} required value={profile.course} onChange={updateProfile('course')} className="h-11 rounded-xl border-[#dfe5dc]"/>
-                <label className="block space-y-2 text-sm font-medium text-[#26392e]" htmlFor="year-of-study">
+                <label className="block space-y-2 text-sm font-medium text-[#26392e]" htmlFor="course">
+                  Course
+                  <select id="course" value={profile.course} onChange={updateCourse} required className="h-11 w-full rounded-xl border border-[#dfe5dc] bg-white px-3 text-sm font-normal">
+                    <option value="" disabled>Select your course</option>
+                    {courses.map((course) => <option key={course} value={course}>{course}</option>)}
+                  </select>
+                </label>
+                {profile.course === 'B.Tech' && <label className="block space-y-2 text-sm font-medium text-[#26392e]" htmlFor="branch">
+                  Branch
+                  <select id="branch" value={profile.branch} onChange={updateProfile('branch')} required className="h-11 w-full rounded-xl border border-[#dfe5dc] bg-white px-3 text-sm font-normal">
+                    <option value="" disabled>Select your branch</option>
+                    {branches.map((branch) => <option key={branch} value={branch}>{branch}</option>)}
+                  </select>
+                </label>}
+                {profile.course && <label className="block space-y-2 text-sm font-medium text-[#26392e]" htmlFor="year-of-study">
                   Year of study
                   <select id="year-of-study" value={profile.yearOfStudy} onChange={updateProfile('yearOfStudy')} required className="h-11 w-full rounded-xl border border-[#dfe5dc] bg-white px-3 text-sm font-normal">
                     <option value="" disabled>Select your year</option>
-                    {[1, 2, 3, 4, 5, 6].map((year) => <option key={year} value={year}>Year {year}</option>)}
+                    {Array.from({ length: profile.course === 'B.Tech' || profile.course === 'B. Pharm' ? 4 : 2 }, (_, index) => index + 1).map((year) => <option key={year} value={year}>Year {year}</option>)}
                   </select>
-                </label>
+                </label>}
                 <p className="text-xs leading-5 text-[#849087]">If this email already has an account, sign in or use password reset instead of creating another account.</p>
               </div>}
               {showEmail && <div className="space-y-2">
