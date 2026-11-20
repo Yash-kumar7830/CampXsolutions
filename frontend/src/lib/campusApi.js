@@ -222,10 +222,10 @@ export async function getMyClaims(userId) {
         .eq('user_id', userId);
     if (itemsError)
         throw new Error(itemsError.message);
-    const itemIds = (ownItems ?? []).map((item) => item.id);
+    const ownedItemIds = (ownItems ?? []).map((item) => item.id);
     const [claimsResult, claimantResult] = await Promise.all([
-        itemIds.length
-            ? db.from('claims').select('id,item_id,claimant_id,status,created_at').in('item_id', itemIds).order('created_at', { ascending: false })
+        ownedItemIds.length
+            ? db.from('claims').select('id,item_id,claimant_id,status,created_at').in('item_id', ownedItemIds).order('created_at', { ascending: false })
             : Promise.resolve({ data: [], error: null }),
         db.from('claims').select('id,item_id,claimant_id,status,created_at').eq('claimant_id', userId).order('created_at', { ascending: false }),
     ]);
@@ -233,9 +233,16 @@ export async function getMyClaims(userId) {
         throw new Error(claimsResult.error.message);
     if (claimantResult.error)
         throw new Error(claimantResult.error.message);
-    const names = new Map((ownItems ?? []).map((item) => [item.id, item.title]));
+    const claimRows = [...(claimsResult.data ?? []), ...(claimantResult.data ?? [])];
+    const claimItemIds = [...new Set(claimRows.map((claim) => claim.item_id))];
+    const itemTitleResult = claimItemIds.length
+        ? await db.from('items').select('id,title').in('id', claimItemIds)
+        : { data: [], error: null };
+    if (itemTitleResult.error)
+        throw new Error(itemTitleResult.error.message);
+    const names = new Map((itemTitleResult.data ?? []).map((item) => [item.id, item.title]));
     const claimsById = new Map();
-    for (const row of [...(claimsResult.data ?? []), ...(claimantResult.data ?? [])]) {
+    for (const row of claimRows) {
         const claim = row;
         claimsById.set(claim.id, {
             id: claim.id,
